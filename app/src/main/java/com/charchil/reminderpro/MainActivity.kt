@@ -1,40 +1,49 @@
 package com.charchil.reminderpro
 
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-//import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.unit.sp
 import com.charchil.reminderpro.domain.model.Reminder
 import com.charchil.reminderpro.presentation.ui.MainViewModel
 import com.charchil.reminderpro.presentation.ui.setUpAlarm
 import com.charchil.reminderpro.presentation.ui.setUpPeriodicAlarm
 import com.charchil.reminderpro.presentation.ui.theme.ReminderProTheme
 import dagger.hilt.android.AndroidEntryPoint
-import androidx.compose.material3.BottomSheetScaffold
-import androidx.compose.ui.graphics.Color
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.charchil.reminderpro.presentation.ui.BottomNavItem
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
+import androidx.compose.material3.BottomSheetScaffold
+import androidx.compose.material3.BottomSheetScaffoldState
+import androidx.compose.material3.rememberBottomSheetScaffoldState
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.window.Dialog
+import androidx.compose.material3.TimePicker
+import androidx.compose.material3.rememberTimePickerState
+import com.charchil.reminderpro.presentation.ui.Form
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -43,10 +52,9 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             ReminderProTheme {
-
                 Surface(modifier = Modifier.fillMaxSize()) {
                     val viewModel = hiltViewModel<MainViewModel>()
-                    MainScreen(viewModel)
+                    MainScreen(viewModel = viewModel)
                 }
             }
         }
@@ -64,6 +72,13 @@ fun MainScreen(viewModel: MainViewModel) {
     val timePickerState = rememberTimePickerState()
     val format = remember { SimpleDateFormat("hh:mm a", Locale.getDefault()) }
     val timeInMillis = remember { mutableStateOf(0L) }
+    var selectedTab by remember { mutableStateOf(0) }
+
+    val tabs = listOf(
+        BottomNavItem.Home,
+        BottomNavItem.Reminder,
+        BottomNavItem.Settings
+    )
 
     BottomSheetScaffold(
         scaffoldState = sheetState,
@@ -71,20 +86,21 @@ fun MainScreen(viewModel: MainViewModel) {
         sheetContent = {
             Form(
                 time = format.format(timeInMillis.value),
-                onTimeClick = { isTimePickerVisible.value = true }
-            ) { name, dosage, checked ->
-                val reminder = Reminder(
-                    name, dosage, timeInMillis.value, isTaken = false,
-                    isRepeat = checked
-                )
-                viewModel.insert(reminder)
-                if (checked) {
-                    setUpPeriodicAlarm(context, reminder)
-                } else {
-                    setUpAlarm(context, reminder)
+                onTimeClick = { isTimePickerVisible.value = true },
+                onSubmit = { name, dosage, checked ->
+                    val reminder = Reminder(
+                        name, dosage, timeInMillis.value, isTaken = false,
+                        isRepeat = checked
+                    )
+                    viewModel.insert(reminder)
+                    if (checked) {
+                        setUpPeriodicAlarm(context, reminder)
+                    } else {
+                        setUpAlarm(context, reminder)
+                    }
                 }
+            )
 
-            }
         }
     ) { paddingValues ->
         Scaffold(
@@ -93,197 +109,167 @@ fun MainScreen(viewModel: MainViewModel) {
                     title = { Text(text = "Event Reminder") },
                     actions = {
                         IconButton(onClick = {
-                            scope.launch { sheetState.bottomSheetState.expand() }
+                            scope.launch {
+                                sheetState.bottomSheetState.expand()
+                            }
                         }) {
-                            Icon(imageVector = Icons.Default.Add, contentDescription = null,modifier = Modifier.size(38.dp))
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = null,
+                                modifier = Modifier.size(38.dp)
+                            )
                         }
                     }
                 )
+            },
+            bottomBar = {
+                NavigationBar {
+                    tabs.forEachIndexed { index, item ->
+                        NavigationBarItem(
+                            selected = selectedTab == index,
+                            onClick = { selectedTab = index },
+                            icon = {
+                                Icon(
+                                    painter = painterResource(id = item.icon),
+                                    contentDescription = item.title
+                                )
+                            },
+                            label = { Text(text = item.title) }
+                        )
+                    }
+                }
             }
         ) { innerPadding ->
             if (isTimePickerVisible.value) {
                 Dialog(onDismissRequest = { isTimePickerVisible.value = false }) {
-                    Column {
+                    Column(
+                        modifier = Modifier
+                            .padding(16.dp)
+                            .background(Color.White)
+                    ) {
                         TimePicker(state = timePickerState)
-                        Row {
-                            Button(onClick = { isTimePickerVisible.value = false }) {
-                                Text(text = "Cancel")
-                            }
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.End
+                        ) {
                             Button(onClick = {
+                                isTimePickerVisible.value = false
+                            }) {
+                                Text("Cancel")
+                            }
+                            TextButton(onClick = {
                                 val calendar = Calendar.getInstance().apply {
-                                    set(Calendar.HOUR_OF_DAY, timePickerState.hour) // ✅ 24-hour format (correct)
+                                    set(Calendar.HOUR_OF_DAY, timePickerState.hour)
                                     set(Calendar.MINUTE, timePickerState.minute)
-                                    set(Calendar.SECOND, 0) // Ensuring precise time
+                                    set(Calendar.SECOND, 0)
                                     set(Calendar.MILLISECOND, 0)
                                 }
                                 timeInMillis.value = calendar.timeInMillis
                                 isTimePickerVisible.value = false
                             }) {
-                                Text(text = "Confirm")
+                                Text("Confirm")
                             }
                         }
                     }
                 }
             }
 
-            if (uiState.data.isEmpty()) {
-                Box(
-                    modifier = Modifier
-                        .padding(innerPadding)
-                        .fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(text = "No Data")
-                }
-            } else {
-                LazyColumn(modifier = Modifier.padding(innerPadding)) {
-                    items(uiState.data) {
-                        Card(modifier = Modifier.padding(8.dp)) {
-                            Row(
-                                modifier = Modifier.padding(8.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(text = it.name)
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    Text(text = it.dosage)
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    Text(text = format.format(it.timeInmillis))
-                                }
-                                if (it.isRepeat) {
+            if (selectedTab == 0) {
+                if (uiState.data.isEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .padding(innerPadding)
+                            .fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_no_data),
+                                contentDescription = "No Data Icon",
+                                tint = Color.Unspecified,
+                                modifier = Modifier.size(100.dp)
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                text = "No Data Found!",
+                                fontSize = 24.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                } else {
+                    LazyColumn(modifier = Modifier.padding(innerPadding)) {
+                        items(uiState.data) { reminder ->
+                            Card(modifier = Modifier.padding(8.dp)) {
+                                Row(
+                                    modifier = Modifier.padding(8.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(text = reminder.name)
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text(text = reminder.dosage)
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text(text = format.format(reminder.timeInmillis))
+                                    }
+                                    if (reminder.isRepeat) {
+                                        IconButton(onClick = {
+                                            viewModel.update(reminder.copy(isTaken = true, isRepeat = false))
+                                        }) {
+                                            Icon(
+                                                painter = painterResource(id = R.drawable.ic_schedule),
+                                                contentDescription = null
+                                            )
+                                        }
+                                    }
                                     IconButton(onClick = {
-                                        viewModel.update(it.copy(isTaken = true, isRepeat = false))
+                                        viewModel.delete(reminder)
                                     }) {
                                         Icon(
-                                            painter = painterResource(id = R.drawable.ic_schedule),
+                                            painter = painterResource(id = R.drawable.ic_delete),
                                             contentDescription = null
                                         )
                                     }
                                 }
-                                IconButton(onClick = { viewModel.delete(it) }) {
-                                    Icon(
-                                        painter = painterResource(id = R.drawable.ic_delete),
-                                        contentDescription = null
-                                    )
-                                }
                             }
                         }
                     }
+                }
+            } else {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(text = "${tabs[selectedTab].title} screen coming soon...", color = Color.Gray)
                 }
             }
         }
     }
 }
 
-
-
-
-
-
 @Composable
-fun Form(
+fun ReminderForm(
     time: String,
     onTimeClick: () -> Unit,
-    onClick: (String, String, Boolean) -> Unit
+    onSubmit: (String, String, Boolean) -> Unit
 ) {
-    val name = remember { mutableStateOf("") }
-    val dosage = remember { mutableStateOf("") }
-    val isChecked = remember { mutableStateOf(false) }
-    val context = LocalContext.current // ✅ Toast ke liye
-
-    Column(
-        modifier = Modifier
-            .padding(12.dp)
-            .fillMaxWidth()
-            .background(Color(0xFF2C2C2C), shape = RoundedCornerShape(12.dp))
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "Create Task",
-                style = MaterialTheme.typography.headlineMedium,
-                modifier = Modifier.weight(1f)
-            )
-            Icon(
-                painter = painterResource(id = R.drawable.task_icon),
-                contentDescription = "Add",
-                tint = Color.White,
-                modifier = Modifier.size(30.dp)
-            )
+    // Dummy form UI for example. Replace with your real form UI.
+    Column(modifier = Modifier.padding(16.dp)) {
+        Text(text = "Selected Time: $time")
+        Spacer(modifier = Modifier.height(8.dp))
+        Button(onClick = onTimeClick) {
+            Text("Pick Time")
         }
-
-        Spacer(Modifier.height(12.dp))
-
-        // 🔹 **Name Field**
-        OutlinedTextField(
-            value = name.value,
-            onValueChange = { name.value = it },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-            placeholder = { Text(text = "Enter Name", color = Color.Gray) }
-        )
-
-        Spacer(Modifier.height(10.dp))
-
-        // 🔹 **Dosage Field**
-        OutlinedTextField(
-            value = dosage.value,
-            onValueChange = { dosage.value = it },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-            placeholder = { Text(text = "Enter Event Description", color = Color.Gray) }
-        )
-
-        Spacer(Modifier.height(10.dp))
-
-        // 🔹 **Time Picker**
-        OutlinedTextField(
-            value = time,
-            onValueChange = {},
-            modifier = Modifier
-                .clickable { onTimeClick.invoke() }
-                .fillMaxWidth(),
-            enabled = false
-        )
-
-        Spacer(Modifier.height(8.dp))
-
-        Row(
-            Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(text = "Schedule")
-            Spacer(Modifier.width(12.dp))
-            Switch(
-                checked = isChecked.value,
-                onCheckedChange = { isChecked.value = it }
-            )
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // 🔥 **Button with Validation**
+        Spacer(modifier = Modifier.height(8.dp))
         Button(onClick = {
-            if (name.value.isBlank() || dosage.value.isBlank()) {
-                // ✅ Empty fields ke liye Toast message
-                Toast.makeText(context, "Please fill all fields", Toast.LENGTH_SHORT).show()
-            } else {
-                // ✅ Data Add karna
-                onClick.invoke(name.value, dosage.value, isChecked.value)
-
-                // 🧹 **Clear fields after adding**
-                name.value = ""
-                dosage.value = ""
-                isChecked.value = false
-            }
+            onSubmit("Medicine Name", "1 Dose", false)
         }) {
-            Text(text = "Add")
+            Text("Save Reminder")
         }
-
-        Spacer(modifier = Modifier.height(32.dp))
     }
 }
