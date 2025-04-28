@@ -76,7 +76,7 @@ fun SplashScreen(
                 text = "Reminder Pro",
                 fontSize = 32.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.White,
+                color = MaterialTheme.colorScheme.onPrimary,
                 modifier = Modifier
                     .alpha(alphaAnim.value)
                     .offset(y = yOffsetAnim.value.dp)
@@ -85,7 +85,7 @@ fun SplashScreen(
             Text(
                 text = "Never miss an important event",
                 fontSize = 16.sp,
-                color = Color.Black,
+                color = MaterialTheme.colorScheme.onPrimary,
                 modifier = Modifier
                     .alpha(alphaAnim.value)
                     .offset(y = yOffsetAnim.value.dp)

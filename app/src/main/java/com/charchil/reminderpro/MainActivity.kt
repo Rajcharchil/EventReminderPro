@@ -1,5 +1,6 @@
 package com.charchil.reminderpro
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -28,6 +29,7 @@ import com.charchil.reminderpro.presentation.ui.theme.ReminderProTheme
 import dagger.hilt.android.AndroidEntryPoint
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.charchil.reminderpro.presentation.ui.BottomNavItem
+import com.charchil.reminderpro.presentation.screens.worldclock.WorldClockActivity
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -100,9 +102,8 @@ fun MainScreen(viewModel: MainViewModel) {
                     }
                 }
             )
-
         }
-    ) { paddingValues ->
+    ) { innerPadding ->
         Scaffold(
             topBar = {
                 TopAppBar(
@@ -127,7 +128,14 @@ fun MainScreen(viewModel: MainViewModel) {
                     tabs.forEachIndexed { index, item ->
                         NavigationBarItem(
                             selected = selectedTab == index,
-                            onClick = { selectedTab = index },
+                            onClick = { 
+                                if (item == BottomNavItem.Reminder) {
+                                    // Navigate to WorldClockActivity
+                                    context.startActivity(Intent(context, WorldClockActivity::class.java))
+                                } else {
+                                    selectedTab = index
+                                }
+                            },
                             icon = {
                                 Icon(
                                     painter = painterResource(id = item.icon),
@@ -140,40 +148,6 @@ fun MainScreen(viewModel: MainViewModel) {
                 }
             }
         ) { innerPadding ->
-            if (isTimePickerVisible.value) {
-                Dialog(onDismissRequest = { isTimePickerVisible.value = false }) {
-                    Column(
-                        modifier = Modifier
-                            .padding(16.dp)
-                            .background(Color.White)
-                    ) {
-                        TimePicker(state = timePickerState)
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.End
-                        ) {
-                            Button(onClick = {
-                                isTimePickerVisible.value = false
-                            }) {
-                                Text("Cancel")
-                            }
-                            TextButton(onClick = {
-                                val calendar = Calendar.getInstance().apply {
-                                    set(Calendar.HOUR_OF_DAY, timePickerState.hour)
-                                    set(Calendar.MINUTE, timePickerState.minute)
-                                    set(Calendar.SECOND, 0)
-                                    set(Calendar.MILLISECOND, 0)
-                                }
-                                timeInMillis.value = calendar.timeInMillis
-                                isTimePickerVisible.value = false
-                            }) {
-                                Text("Confirm")
-                            }
-                        }
-                    }
-                }
-            }
-
             if (selectedTab == 0) {
                 if (uiState.data.isEmpty()) {
                     Box(
@@ -238,7 +212,7 @@ fun MainScreen(viewModel: MainViewModel) {
                         }
                     }
                 }
-            } else {
+            } else if (selectedTab == 2) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
