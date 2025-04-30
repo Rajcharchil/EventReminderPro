@@ -6,24 +6,58 @@
 
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:background="@color/brown"
+        android:elevation="8dp">
 
         <androidx.appcompat.widget.Toolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="?attr/colorPrimary"
+            android:background="@color/brown"
+            android:title="Event Reminder Pro"
+            android:titleTextColor="@color/white"
+            android:gravity="center"
+            app:contentInsetStart="0dp"
+            app:titleCentered="true"
+            app:navigationIcon="@drawable/ic_back"
             android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar" />
 
-        <androidx.appcompat.widget.SearchView
-            android:id="@+id/searchBar"
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="8dp"
-            app:iconifiedByDefault="false"
-            app:queryHint="Search cities..." />
+            android:layout_margin="16dp"
+            app:cardCornerRadius="24dp"
+            app:cardElevation="6dp"
+            app:strokeColor="@color/white"
+            app:strokeWidth="1dp"
+            app:backgroundTint="@color/black">
+
+            <androidx.appcompat.widget.SearchView
+                android:id="@+id/searchBar"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:background="@android:color/transparent"
+                android:iconifiedByDefault="false"
+                android:queryHint="🔍 Search cities..."
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:clickable="true"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:textColor="@color/white"
+                android:textColorHint="@color/white"
+                app:closeIcon="@drawable/ic_close"
+                app:searchIcon="@drawable/ic_search"
+                app:iconTint="@color/white"
+                app:queryBackground="@android:color/transparent"
+                app:searchHintIcon="@drawable/ic_search"
+                app:hintTextColor="@color/white" />
+
+        </com.google.android.material.card.MaterialCardView>
 
     </com.google.android.material.appbar.AppBarLayout>
+
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/worldClocksRecyclerView"

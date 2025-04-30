@@ -5,7 +5,6 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -35,17 +34,15 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 import androidx.compose.material3.BottomSheetScaffold
-import androidx.compose.material3.BottomSheetScaffoldState
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.window.Dialog
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.rememberTimePickerState
 import com.charchil.reminderpro.presentation.ui.Form
+import com.charchil.reminderpro.util.StopwatchActivity
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -128,12 +125,17 @@ fun MainScreen(viewModel: MainViewModel) {
                     tabs.forEachIndexed { index, item ->
                         NavigationBarItem(
                             selected = selectedTab == index,
-                            onClick = { 
-                                if (item == BottomNavItem.Reminder) {
-                                    // Navigate to WorldClockActivity
-                                    context.startActivity(Intent(context, WorldClockActivity::class.java))
-                                } else {
-                                    selectedTab = index
+                            onClick = {
+                                when (item) {
+                                    BottomNavItem.Reminder -> {
+                                        context.startActivity(Intent(context, WorldClockActivity::class.java))
+                                    }
+                                    BottomNavItem.Settings -> {
+                                        context.startActivity(Intent(context, StopwatchActivity::class.java))
+                                    }
+                                    else -> {
+                                        selectedTab = index
+                                    }
                                 }
                             },
                             icon = {
@@ -224,26 +226,43 @@ fun MainScreen(viewModel: MainViewModel) {
             }
         }
     }
-}
 
-@Composable
-fun ReminderForm(
-    time: String,
-    onTimeClick: () -> Unit,
-    onSubmit: (String, String, Boolean) -> Unit
-) {
-    // Dummy form UI for example. Replace with your real form UI.
-    Column(modifier = Modifier.padding(16.dp)) {
-        Text(text = "Selected Time: $time")
-        Spacer(modifier = Modifier.height(8.dp))
-        Button(onClick = onTimeClick) {
-            Text("Pick Time")
-        }
-        Spacer(modifier = Modifier.height(8.dp))
-        Button(onClick = {
-            onSubmit("Medicine Name", "1 Dose", false)
-        }) {
-            Text("Save Reminder")
+    // TIME PICKER DIALOG
+    if (isTimePickerVisible.value) {
+        Dialog(onDismissRequest = { isTimePickerVisible.value = false }) {
+            Surface(
+                shape = MaterialTheme.shapes.medium,
+                tonalElevation = 8.dp
+            ) {
+                Column(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    TimePicker(state = timePickerState)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        TextButton(onClick = { isTimePickerVisible.value = false }) {
+                            Text("Cancel")
+                        }
+                        TextButton(onClick = {
+                            val calendar = Calendar.getInstance().apply {
+                                set(Calendar.HOUR_OF_DAY, timePickerState.hour)
+                                set(Calendar.MINUTE, timePickerState.minute)
+                                set(Calendar.SECOND, 0)
+                            }
+                            timeInMillis.value = calendar.timeInMillis
+                            isTimePickerVisible.value = false
+                        }) {
+                            Text("OK")
+                        }
+                    }
+                }
+            }
         }
     }
 }

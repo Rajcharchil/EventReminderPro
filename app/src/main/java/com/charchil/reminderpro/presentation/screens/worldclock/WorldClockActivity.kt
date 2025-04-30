@@ -17,8 +17,9 @@ class WorldClockActivity : AppCompatActivity() {
     private lateinit var binding: ActivityWorldClockBinding
     private lateinit var adapter: WorldClockAdapter
     private val cities = mutableListOf(
-        City("New York", "America/New_York"),
-        City("London", "Europe/London"),
+        City("India \uD83C\uDDEE\uD83C\uDDF3", "Asia/Kolkata"),
+        City("New York \uD83C\uDDF3\uD83C\uDDE8", "America/New_York"),
+        City("London \uD83C\uDFF4\uDB40\uDC67\uDB40\uDC62\uDB40\uDC65\uDB40\uDC6E\uDB40\uDC67\uDB40\uDC7F", "Europe/London"),
         City("Tokyo", "Asia/Tokyo"),
         City("Sydney", "Australia/Sydney")
     )
@@ -51,17 +52,27 @@ class WorldClockActivity : AppCompatActivity() {
     }
 
     private fun setupSearchBar() {
-        binding.searchBar.setOnQueryTextListener(object : androidx.appcompat.widget.SearchView.OnQueryTextListener {
+        val searchView = binding.searchBar
+
+        // Yeh naya code: Jaise hi click ho, search view expand ho jaye
+        searchView.setOnQueryTextFocusChangeListener { view, hasFocus ->
+            if (hasFocus) {
+                searchView.isIconified = false
+            }
+        }
+
+        // Pehle se jo search text filter tha
+        searchView.setOnQueryTextListener(object : androidx.appcompat.widget.SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
                 return false
             }
-
             override fun onQueryTextChange(newText: String?): Boolean {
                 adapter.filter(newText.orEmpty())
                 return true
             }
         })
     }
+
 
     private fun setupFab() {
         binding.fabAddClock.setOnClickListener {
