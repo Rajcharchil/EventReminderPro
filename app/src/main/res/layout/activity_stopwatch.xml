@@ -5,53 +5,136 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@android:color/black"
     tools:context=".util.StopwatchActivity">
 
+    <!-- Top Bar -->
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        app:layout_constraintTop_toTopOf="parent">
 
-<TextView
-    android:id="@+id/timerTextView"
-    android:layout_width="0dp"
-    android:layout_height="wrap_content"
-    android:text="00:00:00.00"
-    android:textSize="48sp"
-    android:textStyle="bold"
-    android:gravity="center"
-    android:textColor="@color/black"
-    app:layout_constraintTop_toTopOf="parent"
-    app:layout_constraintBottom_toTopOf="@+id/buttonContainer"
-    app:layout_constraintStart_toStartOf="parent"
-    app:layout_constraintEnd_toEndOf="parent"/>
+        <ImageButton
+            android:id="@+id/backButton"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_back"
+            android:contentDescription="Back"
+            android:tint="@android:color/white"/>
 
-<LinearLayout
-    android:id="@+id/buttonContainer"
-    android:layout_width="0dp"
-    android:layout_height="wrap_content"
-    android:orientation="horizontal"
-    android:gravity="center"
-    android:layout_marginTop="24dp"
-    app:layout_constraintTop_toBottomOf="@id/timerTextView"
-    app:layout_constraintStart_toStartOf="parent"
-    app:layout_constraintEnd_toEndOf="parent">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Stopwatch"
+            android:textColor="@android:color/white"
+            android:textSize="20sp"
+            android:layout_gravity="center"/>
 
-    <Button
-        android:id="@+id/startButton"
+    </androidx.appcompat.widget.Toolbar>
+
+    <!-- Timer Text -->
+    <TextView
+        android:id="@+id/timerTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Start"
-        android:layout_marginEnd="16dp"/>
+        android:text="00:00:00"
+        android:textSize="48sp"
+        android:textStyle="bold"
+        android:textColor="@android:color/white"
+        android:layout_marginTop="32dp"
+        app:layout_constraintTop_toBottomOf="@id/toolbar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
 
-    <Button
-        android:id="@+id/pauseButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Pause"
-        android:layout_marginEnd="16dp"/>
+    <!-- Circular Progress with Center Button -->
+    <FrameLayout
+        android:id="@+id/timerContainer"
+        android:layout_width="280dp"
+        android:layout_height="280dp"
+        android:layout_marginTop="24dp"
+        app:layout_constraintTop_toBottomOf="@id/timerTextView"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
-    <Button
-        android:id="@+id/resetButton"
-        android:layout_width="wrap_content"
+        <com.google.android.material.progressindicator.CircularProgressIndicator
+            android:id="@+id/progressIndicator"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:progress="75"
+            app:indicatorSize="270dp"
+            app:trackThickness="5dp"
+            app:trackColor="#4CAF50"
+            app:indicatorColor="#F2204B"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/stopButton"
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:layout_gravity="center"
+            android:insetLeft="0dp"
+            android:insetTop="0dp"
+            android:insetRight="0dp"
+            android:insetBottom="0dp"
+            android:text="Start"
+            android:textColor="@android:color/white"
+            android:textSize="18sp"
+            app:cornerRadius="60dp"
+            app:backgroundTint="#4CAF50"/>
+    </FrameLayout>
+
+    <!-- Lap Times RecyclerView -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/lapTimesRecyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="24dp"
+        android:layout_marginBottom="24dp"
+        android:layout_marginHorizontal="16dp"
+        android:background="#1A1A1A"
+        android:clipToPadding="false"
+        android:paddingVertical="8dp"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        android:orientation="vertical"
+        tools:listitem="@layout/item_lap_time"
+        tools:itemCount="3"
+        app:layout_constraintTop_toBottomOf="@id/timerContainer"
+        app:layout_constraintBottom_toTopOf="@id/buttonContainer"/>
+
+    <!-- Bottom Buttons -->
+    <LinearLayout
+        android:id="@+id/buttonContainer"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Reset"/>
-</LinearLayout>
+        android:orientation="horizontal"
+        android:padding="16dp"
+        android:gravity="center"
+        android:layout_marginBottom="32dp"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/resetButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginEnd="8dp"
+            android:text="Reset"
+            android:textColor="@android:color/white"
+            app:cornerRadius="24dp"
+            android:backgroundTint="#666666"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/lapButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:text="Lap"
+            android:textColor="@android:color/white"
+            app:cornerRadius="24dp"
+            android:backgroundTint="#4285F4"/>
+
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

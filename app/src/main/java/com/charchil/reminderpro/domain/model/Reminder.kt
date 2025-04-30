@@ -5,6 +5,7 @@ import androidx.room.PrimaryKey
 
 @Entity
 data class Reminder(
+
     val name:String,
     val dosage:String,
     @PrimaryKey(autoGenerate = false)
@@ -13,3 +14,6 @@ data class Reminder(
     val isRepeat:Boolean=false,
 
 )
+
+
+
