@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -43,6 +44,11 @@ import androidx.compose.material3.TimePicker
 import androidx.compose.material3.rememberTimePickerState
 import com.charchil.reminderpro.presentation.ui.Form
 import com.charchil.reminderpro.util.StopwatchActivity
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.CircleShape
+import android.widget.Toast
+import androidx.compose.foundation.clickable
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -72,6 +78,10 @@ fun MainScreen(viewModel: MainViewModel) {
     val format = remember { SimpleDateFormat("hh:mm a", Locale.getDefault()) }
     val timeInMillis = remember { mutableStateOf(0L) }
     var selectedTab by remember { mutableStateOf(0) }
+    var editingReminder by remember { mutableStateOf<Reminder?>(null) }
+    var name by remember { mutableStateOf("") }
+    var dosage by remember { mutableStateOf("") }
+    var repeat by remember { mutableStateOf(false) }
 
     val tabs = listOf(
         BottomNavItem.Home,
@@ -86,18 +96,38 @@ fun MainScreen(viewModel: MainViewModel) {
             Form(
                 time = format.format(timeInMillis.value),
                 onTimeClick = { isTimePickerVisible.value = true },
-                onSubmit = { name, dosage, checked ->
-                    val reminder = Reminder(
-                        name, dosage, timeInMillis.value, isTaken = false,
-                        isRepeat = checked
-                    )
-                    viewModel.insert(reminder)
-                    if (checked) {
-                        setUpPeriodicAlarm(context, reminder)
+                onSubmit = { newName, newDosage, newRepeat ->
+                    if (editingReminder != null) {
+                        // Update existing reminder
+                        val updatedReminder = editingReminder!!.copy(
+                            name = newName,
+                            dosage = newDosage,
+                            timeInmillis = timeInMillis.value,
+                            isRepeat = newRepeat
+                        )
+                        viewModel.update(updatedReminder)
+                        editingReminder = null
                     } else {
-                        setUpAlarm(context, reminder)
+                        // Create new reminder
+                        val reminder = Reminder(
+                            newName, newDosage, timeInMillis.value, isTaken = false,
+                            isRepeat = newRepeat
+                        )
+                        viewModel.insert(reminder)
+                        if (newRepeat) {
+                            setUpPeriodicAlarm(context, reminder)
+                        } else {
+                            setUpAlarm(context, reminder)
+                        }
                     }
-                }
+                    name = ""
+                    dosage = ""
+                    repeat = false
+                    timeInMillis.value = 0L
+                },
+                initialName = name,
+                initialDosage = dosage,
+                initialRepeat = repeat
             )
         }
     ) { innerPadding ->
@@ -106,6 +136,46 @@ fun MainScreen(viewModel: MainViewModel) {
                 TopAppBar(
                     title = { Text(text = "Event Reminder") },
                     actions = {
+                        // Notification Icon with Count
+                        Box(
+                            modifier = Modifier
+                                .padding(end = 8.dp)
+                                .clickable {
+                                    val message = if (uiState.data.isEmpty()) {
+                                        "No events scheduled"
+                                    } else {
+                                        "You have ${uiState.data.size} event${if (uiState.data.size > 1) "s" else ""} scheduled"
+                                    }
+                                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                                },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Notifications,
+                                contentDescription = "Notifications",
+                                modifier = Modifier.size(38.dp)
+                            )
+                            if (uiState.data.isNotEmpty()) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(20.dp)
+                                        .background(
+                                            color = Color.Red,
+                                            shape = CircleShape
+                                        )
+                                        .align(Alignment.TopEnd),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = uiState.data.size.toString(),
+                                        color = Color.White,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        modifier = Modifier.padding(2.dp)
+                                    )
+                                }
+                            }
+                        }
+                        // Add Button
                         IconButton(onClick = {
                             scope.launch {
                                 sheetState.bottomSheetState.expand()
@@ -178,39 +248,85 @@ fun MainScreen(viewModel: MainViewModel) {
                     }
                 } else {
                     LazyColumn(modifier = Modifier.padding(innerPadding)) {
-                        items(uiState.data) { reminder ->
-                            Card(modifier = Modifier.padding(8.dp)) {
+                        items(uiState.data.sortedBy { it.timeInmillis }) { reminder ->
+                            Card(
+                                modifier = Modifier
+                                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                                    .fillMaxWidth(),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                                ),
+                                elevation = CardDefaults.cardElevation(
+                                    defaultElevation = 4.dp
+                                )
+                            ) {
                                 Row(
                                     modifier = Modifier.padding(8.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Column(modifier = Modifier.weight(1f)) {
-                                        Text(text = reminder.name)
+                                        Text(
+                                            text = reminder.name,
+                                            style = MaterialTheme.typography.titleMedium,
+                                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                                        )
                                         Spacer(modifier = Modifier.height(4.dp))
-                                        Text(text = reminder.dosage)
+                                        Text(
+                                            text = reminder.dosage,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                                        )
                                         Spacer(modifier = Modifier.height(4.dp))
-                                        Text(text = format.format(reminder.timeInmillis))
+                                        Text(
+                                            text = format.format(reminder.timeInmillis),
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.5f)
+                                        )
                                     }
-                                    if (reminder.isRepeat) {
+                                    Row {
                                         IconButton(onClick = {
-                                            viewModel.update(reminder.copy(isTaken = true, isRepeat = false))
+                                            editingReminder = reminder
+                                            name = reminder.name
+                                            dosage = reminder.dosage
+                                            repeat = reminder.isRepeat
+                                            timeInMillis.value = reminder.timeInmillis
+                                            scope.launch {
+                                                sheetState.bottomSheetState.expand()
+                                            }
                                         }) {
                                             Icon(
-                                                painter = painterResource(id = R.drawable.ic_schedule),
-                                                contentDescription = null
+                                                imageVector = Icons.Default.Edit,
+                                                contentDescription = "Edit",
+                                                tint = MaterialTheme.colorScheme.primary
+                                            )
+                                        }
+                                        if (reminder.isRepeat) {
+                                            IconButton(onClick = {
+                                                viewModel.update(reminder.copy(isTaken = true, isRepeat = false))
+                                            }) {
+                                                Icon(
+                                                    painter = painterResource(id = R.drawable.ic_schedule),
+                                                    contentDescription = null,
+                                                    tint = MaterialTheme.colorScheme.primary
+                                                )
+                                            }
+                                        }
+                                        IconButton(onClick = {
+                                            viewModel.delete(reminder)
+                                        }) {
+                                            Icon(
+                                                painter = painterResource(id = R.drawable.ic_delete),
+                                                contentDescription = null,
+                                                tint = MaterialTheme.colorScheme.error
                                             )
                                         }
                                     }
-                                    IconButton(onClick = {
-                                        viewModel.delete(reminder)
-                                    }) {
-                                        Icon(
-                                            painter = painterResource(id = R.drawable.ic_delete),
-                                            contentDescription = null
-                                        )
-                                    }
                                 }
                             }
+                            Divider(
+                                modifier = Modifier.padding(horizontal = 16.dp),
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
+                            )
                         }
                     }
                 }

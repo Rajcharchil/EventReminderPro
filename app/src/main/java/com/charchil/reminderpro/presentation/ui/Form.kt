@@ -17,11 +17,14 @@ import androidx.compose.ui.unit.dp
 fun Form(
     time: String,
     onTimeClick: () -> Unit,
-    onSubmit: (String, String, Boolean) -> Unit
+    onSubmit: (String, String, Boolean) -> Unit,
+    initialName: String = "",
+    initialDosage: String = "",
+    initialRepeat: Boolean = false
 ) {
-    var name by remember { mutableStateOf("") }
-    var dosage by remember { mutableStateOf("") }
-    var repeat by remember { mutableStateOf(false) }
+    var name by remember { mutableStateOf(initialName) }
+    var dosage by remember { mutableStateOf(initialDosage) }
+    var repeat by remember { mutableStateOf(initialRepeat) }
 
     val context = LocalContext.current // 👈 Context for Toast
 
@@ -41,7 +44,6 @@ fun Form(
             modifier = Modifier.fillMaxWidth()
         )
         Spacer(modifier = Modifier.height(8.dp))
-
 
         Card(
             modifier = Modifier
