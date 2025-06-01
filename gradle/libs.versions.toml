@@ -13,6 +13,7 @@ roomKtx = "2.6.1"
 transportRuntime = "4.0.0"
 animationCoreAndroid = "1.7.2"
 uiToolingPreviewAndroid = "1.7.8"
+playServicesLocation = "21.3.0"
 
 [libraries]
 androidx-activity-ktx = { module = "androidx.activity:activity-ktx", version.ref = "activity" }
@@ -28,6 +29,7 @@ androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = 
 transport-runtime = { group = "com.google.android.datatransport", name = "transport-runtime", version.ref = "transportRuntime" }
 androidx-animation-core-android = { group = "androidx.compose.animation", name = "animation-core-android", version.ref = "animationCoreAndroid" }
 androidx-ui-tooling-preview-android = { group = "androidx.compose.ui", name = "ui-tooling-preview-android", version.ref = "uiToolingPreviewAndroid" }
+play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesLocation" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

@@ -1,7 +1,7 @@
 package com.charchil.reminderpro.presentation.ui
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccessTime
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import android.widget.Toast
@@ -12,6 +12,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 
 @Composable
 fun Form(
@@ -57,7 +65,7 @@ fun Form(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
-                    imageVector = Icons.Default.AccessTime,
+                    imageVector = Icons.Filled.Check,
                     contentDescription = "Select Time",
                     tint = Color.Gray
                 )
