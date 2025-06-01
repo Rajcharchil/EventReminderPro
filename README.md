@@ -116,7 +116,9 @@ A powerful and modern Android application built to simplify your day-to-day life
 
 > Click below to download and try the app:
 
-[🔗 Download EventReminderPro APK](https://drive.google.com/file/d/1abcXYZ/view?usp=sharing)
+
+[🔗 Click here to download EventReminderPro APK](https://drive.google.com/uc?export=download&id=1xpAVgI2zNTfB6PYBueEi93uCXUMBNQYs)
+
 
 
 ## 📥 Installation Guide
